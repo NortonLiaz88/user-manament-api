@@ -189,7 +189,7 @@ export class UserPostgresRepository
     const currentUser = await this.getById(userId);
     if (currentUser && currentUser.permission === 'ADMIN') {
       result = result.map((user) => {
-        if (user.permission === 'ADMIN' || currentUser.permission === 'GUEST') {
+        if (currentUser.permission === 'GUEST') {
           return {
             ...user,
             isRemovable: false,

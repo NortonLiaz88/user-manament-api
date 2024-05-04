@@ -1,0 +1,97 @@
+stages:
+  - code_quality
+  - test
+  - release
+  - build
+  - deploy
+
+### TEST ###
+eslint:
+  image: node:20.10
+  stage: code_quality
+  before_script:
+    - yarn
+  script:
+    - yarn lint
+  artifacts:
+    untracked: true
+    paths:
+      - node_modules/
+  tags:
+    - lint
+
+run_unit_tests:
+  image: node:20.10
+  stage: test
+  script:
+    - echo "Running tests"
+    - yarn test
+  artifacts:
+    paths:
+      - coverage
+    reports:
+      junit: coverage
+    expire_in: 30 mins
+  tags:
+    - test
+
+### PUBLISH ###
+release:
+  stage: release
+  only:
+    - staging
+    - master
+  script:
+    - npx semantic-release
+  tags:
+    - release
+
+### BUILD ###
+run_build:
+  image: node:20.10
+  stage: build
+  dependencies:
+    - run_unit_tests
+    - eslint
+  only:
+    - develop
+    - staging
+    - master
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - .env
+      - dist/
+      - package.json
+      - docker-compose.yml
+      - Dockerfile
+    expire_in: 1 day
+  tags:
+    - build
+
+### DEPLOY TO DEVELOP ###
+run_deploy_dev:
+  image: docker/compose:1.29.2
+  stage: deploy
+  script:
+    - docker-compose down
+    - docker-compose rm -f
+    - docker-compose up -d --build --force-recreate
+  tags:
+    - deploy
+
+### DEPLOY TO PRODUCTION ###
+run_deploy_prod:
+  image: docker/compose:1.29.2
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - master
+  except:
+    - branches
+  script:
+    - docker-compose up -d --build --force-recreate
+  tags:
+    - deploy

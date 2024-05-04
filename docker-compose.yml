@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  challenge-container:
+    container_name: challenge_api
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    ports:
+      - '8000:8000'
+    command: npm run start:prod
+    restart: unless-stopped
+    networks:
+      - challenge-networks
+
+networks:
+  challenge-networks:
+    name: 'challenge-networks'
+    external: true

@@ -47,5 +47,5 @@ docker compose up
 ### Acesse as rotas em:
 
 ```shell
-  http://localhost:8000/api#/
+  http://localhost:8000/docs#/
 ```
